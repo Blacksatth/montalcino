@@ -1,0 +1,1 @@
+export const DEFAULT_SHIPPING_FLAT_RATE = 25000;
