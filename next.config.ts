@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  transpilePackages: ["firebase-admin"],
 };
 
 export default nextConfig;
