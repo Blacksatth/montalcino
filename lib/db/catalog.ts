@@ -75,8 +75,10 @@ function assertImages(images: unknown): asserts images is Product["images"] {
 export async function listCollections(onlyActive = true): Promise<Collection[]> {
   const db = getDb();
   if (!db) {
+    console.warn("[catalog] Firestore no inicializado (db es null)");
     return [];
   }
+  console.log("[catalog] listCollections db ok, onlyActive:", onlyActive);
   const snap = await db
     .collection(COLLECTIONS)
     .orderBy("order", "asc")
