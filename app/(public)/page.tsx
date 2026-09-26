@@ -28,6 +28,7 @@ export default async function HomePage() {
             alt={heroCollection.name}
             fill
             priority
+            loading="eager"
             sizes="100vw"
             className="object-cover"
           />

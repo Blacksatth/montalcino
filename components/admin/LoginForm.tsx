@@ -3,8 +3,10 @@
 import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -17,7 +19,7 @@ export function LoginForm({ next }: { next: string }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function exchangeSession(idToken: string) {
+  const exchangeSession = useCallback(async (idToken: string) => {
     const response = await fetch("/api/auth/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,7 +36,22 @@ export function LoginForm({ next }: { next: string }) {
     }
     router.replace(next.startsWith("/admin") ? next : "/admin");
     router.refresh();
-  }
+  }, [next, router]);
+
+  useEffect(() => {
+    const auth = getClientAuth();
+    if (!auth) return;
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          const idToken = await result.user.getIdToken();
+          await exchangeSession(idToken);
+        }
+      })
+      .catch(() => {
+        setError("No se pudo completar el inicio de sesión con Google.");
+      });
+  }, [exchangeSession]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,9 +82,7 @@ export function LoginForm({ next }: { next: string }) {
     }
     setBusy(true);
     try {
-      const credential = await signInWithPopup(auth, new GoogleAuthProvider());
-      const idToken = await credential.user.getIdToken();
-      await exchangeSession(idToken);
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch {
       setError("No se pudo iniciar sesión con Google.");
     } finally {
