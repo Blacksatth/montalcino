@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, forwardRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useScroll } from "@react-three/drei";
 import type { Collection } from "@/types";
 import * as THREE from "three";
 import gsap from "gsap";
@@ -16,7 +15,6 @@ function SceneContent({
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const particlesRef = useRef<THREE.Points>(null);
-  const { offset } = useScroll();
 
   useFrame((state, delta) => {
     if (groupRef.current) {
@@ -30,8 +28,17 @@ function SceneContent({
   });
 
   useEffect(() => {
-    onScrollProgress(offset);
-  }, [offset, onScrollProgress]);
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = Math.min(scrollTop / docHeight, 1);
+      onScrollProgress(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [onScrollProgress]);
 
   return (
     <group ref={groupRef}>
